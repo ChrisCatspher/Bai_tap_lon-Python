@@ -44,32 +44,37 @@ from part7.solution import (
     calculate_priority_summary
 )
 
-# PART 2
-# CONFIG
+
+
+# PART 2 - TỔNG QUAN & TRỰC QUAN HÓA
+
+
+# Cấu hình trang
 st.set_page_config(
     page_title="Green Logistics Dashboard",
     page_icon="🌱",
     layout="wide"
 )
 
-# TITLE
+
+# Tiêu đề dashboard
 st.title(
     "Bảng điều khiển phát thải Carbon trong Logistics Xanh"
 )
 
 st.write(
     """
-    Ứng dụng phân tích và trực quan hóa lượng phát thải CO2
+    Ứng dụng phân tích và trực quan hóa lượng phát thải CO₂
     trong hoạt động logistics.
     """
 )
 
-# LOAD DATA
+
+# Đọc dữ liệu
 data = load_clean_data2(
     "data/data_clean.csv"
 )
 
-# Đọc dữ liệu
 anomaly_data = load_anomaly_data(
     "data/anomaly_data.csv"
 )
@@ -77,10 +82,13 @@ clean_data = load_clean_data(
     "data/data_clean.csv"
 )
 
+
+
 def create_filtered_data(data):
     st.sidebar.header("Bộ lọc")
 
-    # Vehicle filter
+
+    # Bộ lọc phương tiện
     vehicle_options = sorted(
         data["Vehicle_Type"]
         .dropna()
@@ -93,7 +101,8 @@ def create_filtered_data(data):
         default=vehicle_options
     )
 
-    # Origin filter
+
+    # Bộ lọc trạm xuất phát
     origin_options = sorted(
         data["Origin_Facility"]
         .dropna()
@@ -106,7 +115,8 @@ def create_filtered_data(data):
         default=origin_options
     )
 
-    # Filter data
+
+    # Lọc dữ liệu theo lựa chọn
     filtered_data = data[
         data["Vehicle_Type"].isin(selected_vehicle)
         &
@@ -115,28 +125,38 @@ def create_filtered_data(data):
 
     return filtered_data
 
+
+
 menu = st.sidebar.radio(
     "MENU",
     [
         "🏠 Trang chủ",
         "📊 Tổng quan dữ liệu",
-        "🚦 Phân tích giao thông",
-        "🔍 Phân tích tương quan giữa khoảng cách và khối lượng",
+        "🚦 Phân tích giao thông & kiểm định ANOVA",
+        "🔍 Phân tích tương quan và phân cụm",
         "❌ Phân tích bất thường",
         "🍀 Đề xuất giải pháp Logistics Xanh"
     ]
 )
 
+
+
 if menu == "🏠 Trang chủ":
-    st.header("Trang chủ")
-    st.write("Chào mừng đến với Green Logistics Dashboard!")
+    st.header("🏠 Trang chủ")
+    st.write("Chào mừng đến với Bảng điều khiển Logistics Xanh!")
+
+
 
 elif menu == "📊 Tổng quan dữ liệu":
-    st.header("Tổng quan dữ liệu")
+
+    st.divider()
+
+    st.header("📊 Tổng quan dữ liệu")
 
     filtered_data = create_filtered_data(data)
 
-    # Check empty data
+
+    # Kiểm tra dữ liệu sau khi lọc
     if filtered_data.empty:
 
         st.warning(
@@ -145,22 +165,23 @@ elif menu == "📊 Tổng quan dữ liệu":
 
         st.stop()
 
-    # KPI
+
+    # Chỉ số tổng quan (KPI)
     summary = get_summary(
         filtered_data
     )
 
 
-    # Hàng 1
+    # Hàng KPI 1
     col1, col2, col3 = st.columns(3)
 
     col1.metric(
-        "Tổng lượng CO2",
+        "Tổng lượng CO₂",
         f"{summary['Total CO2']:,.2f} kg"
     )
 
     col2.metric(
-        "Lượng CO2 trung bình/chuyến",
+        "Lượng CO₂ trung bình/chuyến",
         f"{summary['Average CO2/trip']:,.2f} kg"
     )
 
@@ -170,7 +191,7 @@ elif menu == "📊 Tổng quan dữ liệu":
     )
 
 
-    # Hàng 2
+    # Hàng KPI 2
     col4, col5 = st.columns(2)
 
     col4.metric(
@@ -183,11 +204,9 @@ elif menu == "📊 Tổng quan dữ liệu":
         f"{summary['Total Trips']:,}"
     )
 
-    # TIME TREND
-    st.header(
-        "Xu hướng phát thải Carbon"
-    )
 
+    # Xu hướng phát thải theo thời gian
+    st.subheader("Xu hướng phát thải CO₂ theo thời gian")
 
     st.plotly_chart(
         daily_emission_chart(
@@ -196,9 +215,7 @@ elif menu == "📊 Tổng quan dữ liệu":
         use_container_width=True
     )
 
-
     col1, col2 = st.columns(2)
-
 
     with col1:
 
@@ -209,7 +226,6 @@ elif menu == "📊 Tổng quan dữ liệu":
             use_container_width=True
         )
 
-
     with col2:
 
         st.plotly_chart(
@@ -219,14 +235,11 @@ elif menu == "📊 Tổng quan dữ liệu":
             use_container_width=True
         )
 
-    # ORIGIN FACILITY
-    st.header(
-        "Phân tích trạm xuất phát"
-    )
 
+    # Phân tích theo trạm xuất phát
+    st.subheader("Phân tích theo trạm xuất phát")
 
     col1, col2 = st.columns(2)
-
 
     with col1:
 
@@ -236,7 +249,6 @@ elif menu == "📊 Tổng quan dữ liệu":
             ),
             use_container_width=True
         )
-
 
     with col2:
 
@@ -248,18 +260,11 @@ elif menu == "📊 Tổng quan dữ liệu":
         )
 
 
-    st.divider()
+    # Phân tích theo phương tiện
 
-
-    # VEHICLE ANALYSIS
-
-    st.header(
-        "Phân tích phương tiện"
-    )
-
+    st.subheader("Phân tích theo phương tiện")
 
     col1, col2 = st.columns(2)
-
 
     with col1:
 
@@ -270,7 +275,6 @@ elif menu == "📊 Tổng quan dữ liệu":
             use_container_width=True
         )
 
-
     with col2:
 
         st.plotly_chart(
@@ -280,16 +284,23 @@ elif menu == "📊 Tổng quan dữ liệu":
             use_container_width=True
         )
 
-elif menu == "🚦 Phân tích giao thông":
-    st.header("Phân tích giao thông")
 
-    # PART 3
 
-    st.title("Phân tích tác động giao thông đến phát thải CO₂")
+elif menu == "🚦 Phân tích giao thông & kiểm định ANOVA":
+
+
+    # PART 3 - PHÂN TÍCH GIAO THÔNG & KIỂM ĐỊNH ANOVA
+
+    st.divider()
+
+    st.header("🚦 Phân tích giao thông & kiểm định ANOVA")
+
+    st.caption("Đánh giá tác động của điều kiện giao thông và loại tuyến đến phát thải CO₂.")
 
     filtered_data = create_filtered_data(data)
 
-    # Check empty data
+
+    # Kiểm tra dữ liệu sau khi lọc
     if filtered_data.empty:
 
         st.warning(
@@ -299,7 +310,7 @@ elif menu == "🚦 Phân tích giao thông":
         st.stop()
 
 
-    # 1. CO2 THEO GIAO THÔNG
+    # 1. Phát thải CO₂ theo điều kiện giao thông
 
     st.subheader(
         "1. Phát thải CO₂ theo điều kiện giao thông"
@@ -310,7 +321,7 @@ elif menu == "🚦 Phân tích giao thông":
     )
 
 
-    # 2. CO2 THEO LOẠI TUYẾN
+    # 2. Phát thải CO₂ theo loại tuyến
 
     st.subheader(
         "2. Phát thải CO₂ theo loại tuyến"
@@ -321,7 +332,7 @@ elif menu == "🚦 Phân tích giao thông":
     )
 
 
-    # 3. ANOVA
+    # 3. Kiểm định ANOVA
 
     st.subheader(
         "3. Kiểm định ANOVA"
@@ -359,13 +370,19 @@ elif menu == "🚦 Phân tích giao thông":
         anova_result['conclusion']
     )
 
-elif menu == "🔍 Phân tích tương quan giữa khoảng cách và khối lượng":
 
-    # PART 4
+
+elif menu == "🔍 Phân tích tương quan và phân cụm":
+
+
+    # PART 4 - TƯƠNG QUAN & PHÂN CỤM
+
+    st.divider()
 
     filtered_data = create_filtered_data(data)
 
-    # Check empty data
+
+    # Kiểm tra dữ liệu sau khi lọc
     if filtered_data.empty:
 
         st.warning(
@@ -374,15 +391,13 @@ elif menu == "🔍 Phân tích tương quan giữa khoảng cách và khối lư
 
         st.stop()
 
-    st.title(
-        "Phân tích tương quan và phân Cluster chuyến hàng"
-    )
+    st.header("🔍 Phân tích tương quan và phân cụm")
+    st.caption("Phân tích mối quan hệ giữa khoảng cách, khối lượng, phát thải và đặc điểm các nhóm chuyến hàng.")
 
-    # 1. PHÂN TÍCH TƯƠNG QUAN
 
-    st.subheader(
-        "1. Tương quan giữa khoảng cách, khối lượng và phát thải CO₂"
-    )
+    # 1. Phân tích tương quan
+
+    st.subheader("1. Tương quan giữa khoảng cách, khối lượng và phát thải CO₂")
 
     correlation_result = analyze_correlation(
     filtered_data
@@ -407,13 +422,9 @@ elif menu == "🔍 Phân tích tương quan giữa khoảng cách và khối lư
         )
 
 
+    # 2. Phân tích theo loại phương tiện
 
-    # 2. PHÂN TÍCH THEO LOẠI PHƯƠNG TIỆN
-
-
-    st.subheader(
-        "2. Phân tích theo loại phương tiện"
-    )
+    st.subheader("2. Phân tích theo loại phương tiện")
 
     vehicle_analysis = analyze_vehicle_type(
         filtered_data
@@ -443,12 +454,9 @@ elif menu == "🔍 Phân tích tương quan giữa khoảng cách và khối lư
         )
 
 
-    # 3. XE XANH TIẾT KIỆM CO₂ Ở ĐÂU?
+    # 3. So sánh hiệu quả phương tiện xanh
 
-
-    st.subheader(
-        "3. Hiệu quả của phương tiện xanh"
-    )
+    st.subheader("3. Hiệu quả của phương tiện xanh")
 
     eco_result = analyze_eco_saving(
         filtered_data
@@ -491,13 +499,9 @@ elif menu == "🔍 Phân tích tương quan giữa khoảng cách và khối lư
     )
 
 
+    # 4. Phân cụm K-Means
 
-    # 4. K-MEANS ClusterING
-
-
-    st.subheader(
-        "4. Phân Cluster các chuyến hàng"
-    )
+    st.subheader("4. Phân cụm các chuyến hàng")
 
     clustered_data = clustering_data(
         filtered_data,
@@ -514,7 +518,7 @@ elif menu == "🔍 Phân tích tương quan giữa khoảng cách và khối lư
             "Vehicle_Type",
             "Package_Weight_KG"
         ],
-        title="Phân Cluster các chuyến hàng bằng K-Means",
+        title="Phân cụm các chuyến hàng bằng K-Means",
         labels={
             "Distance_KM": "Khoảng cách (KM)",
             "Carbon_Emission_kgCO2e": "Phát thải CO₂ (kgCO₂e)",
@@ -529,23 +533,21 @@ elif menu == "🔍 Phân tích tương quan giữa khoảng cách và khối lư
     )
 
 
-    # 5. Cluster KÉM HIỆU QUẢ NHẤT
+    # 5. Xác định Cluster kém hiệu quả nhất
 
-    st.subheader(
-        "5. Cluster chuyến hàng kém hiệu quả nhất"
-    )
+    st.subheader("5. Cụm chuyến hàng kém hiệu quả nhất")
 
     inefficient_Cluster = find_inefficient_cluster(
         clustered_data
     )
 
     st.metric(
-        "Cluster kém hiệu quả nhất",
-        f"Cluster {inefficient_Cluster}"
+        "Cụm kém hiệu quả nhất",
+        f"Cụm {inefficient_Cluster}"
     )
 
 
-    # Lấy dữ liệu của Cluster kém hiệu quả
+    # Dữ liệu thuộc Cluster kém hiệu quả
     inefficient_data = clustered_data[
         clustered_data["Cluster"] == inefficient_Cluster
     ]
@@ -571,7 +573,7 @@ elif menu == "🔍 Phân tích tương quan giữa khoảng cách và khối lư
         cluster_compare,
         x="Cluster",
         y="Carbon_Emission_kgCO2e",
-        title="Phát thải CO₂ trung bình của từng Cluster",
+        title="Phát thải CO₂ trung bình của từng phân cụm",
         text_auto=".2f",
         labels={
             "Cluster": "Cluster",
@@ -585,9 +587,9 @@ elif menu == "🔍 Phân tích tương quan giữa khoảng cách và khối lư
     )
 
 
-    # Thông tin chi tiết
+    # Thống kê chi tiết Cluster kém hiệu quả
     with st.expander(
-        "Xem thống kê của Cluster kém hiệu quả"
+        "Xem thống kê của những phân cụm kém hiệu quả"
     ):
 
         inefficient_summary = (
@@ -609,9 +611,9 @@ elif menu == "🔍 Phân tích tương quan giữa khoảng cách và khối lư
         )
 
 
-    # Danh sách các chuyến hàng
+    # Danh sách chuyến hàng thuộc Cluster
     with st.expander(
-        "Xem các chuyến hàng thuộc Cluster này"
+        "Xem các chuyến hàng thuộc phân cụm này"
     ):
 
         st.dataframe(
@@ -620,12 +622,9 @@ elif menu == "🔍 Phân tích tương quan giữa khoảng cách và khối lư
         )
 
 
-    # 6. HEAVY TRUCK: TẢI THẤP + ĐI XA + CO₂ CAO
+    # 6. Heavy Truck: tải thấp, đi xa và phát thải cao
 
-
-    st.subheader(
-        "6. Heavy Truck chở nhẹ nhưng đi xa"
-    )
+    st.subheader("6. Heavy Truck chở nhẹ nhưng đi xa")
 
     heavy_truck_result = find_heavy_truck_inefficient(
         filtered_data
@@ -676,32 +675,20 @@ elif menu == "🔍 Phân tích tương quan giữa khoảng cách và khối lư
             use_container_width=True
         )
 
+
+
 elif menu == "❌ Phân tích bất thường":
 
-    st.header("Phân tích bất thường")
+
+    # PART 6 - PHÂN TÍCH BẤT THƯỜNG
+
+    st.divider()
+
+    st.header("❌ Phân tích bất thường")
+    st.caption("Khám phá các ca bất thường theo trạm xuất phát, giao thông và phương tiện.")
 
     
-    # PART 6 - ANOMALY ANALYSIS
-    
-
-    st.title("Phân tích dữ liệu dị biệt")
-
-    
-    # ĐỌC DỮ LIỆU
-    
-
-    anomaly_data = load_anomaly_data(
-        "data/anomaly_data.csv"
-    )
-
-    clean_data = load_clean_data(
-        "data/data_clean.csv"
-    )
-
-    
-    # KIỂM TRA DỮ LIỆU
-    
-
+    # Kiểm tra dữ liệu bất thường
     if anomaly_data.empty:
 
         st.warning(
@@ -712,22 +699,24 @@ elif menu == "❌ Phân tích bất thường":
 
 
     
-    # TỔNG QUAN
+    # Tổng quan dữ liệu bất thường
     
-
     st.subheader("Tổng quan dữ liệu bất thường")
 
-    # Tổng số anomaly
+
+    # Tổng số ca bất thường
     total_anomaly = len(anomaly_data)
 
-    # Số anomaly High Traffic
+
+    # Số ca bất thường trong điều kiện High Traffic
     high_traffic_count = len(
         anomaly_data[
             anomaly_data["Traffic_Conditions"] == "High"
         ]
     )
 
-    # Số Heavy Truck anomaly
+
+    # Số ca bất thường liên quan đến Heavy Truck
     heavy_truck_count = len(
         anomaly_data[
             anomaly_data["Vehicle_Type"] == "Heavy Truck"
@@ -757,18 +746,11 @@ elif menu == "❌ Phân tích bất thường":
             heavy_truck_count
         )
 
-
-    st.divider()
-
-
     
-    # CÂU HỎI 1
-    # 80% CA BẤT THƯỜNG ĐẾN TỪ ĐÂU?
-    
+    # Phân tích 1 - Trạm xuất phát
+    # Xác định nhóm trạm chiếm khoảng 80% ca bất thường 
 
-    st.subheader(
-        "1. 80% các ca bất thường đến từ Trạm xuất phát nào?"
-    )
+    st.subheader("1. Phân bố ca bất thường theo trạm xuất phát")
 
     origin_result = analyze_origin(
         anomaly_data
@@ -783,26 +765,17 @@ elif menu == "❌ Phân tích bất thường":
     else:
 
         
-        # BẢNG
-        
-
-        st.write(
-            "### Số ca bất thường theo trạm xuất phát"
-        )
+        # Bảng dữ liệu
+        st.write("**Số ca bất thường theo trạm xuất phát**")
 
         st.dataframe(
             origin_result,
             use_container_width=True
         )
 
-
         
-        # BAR CHART
-        
-
-        st.write(
-            "### Biểu đồ phân bố ca bất thường"
-        )
+        # Biểu đồ cột
+        st.write("**Biểu đồ phân bố ca bất thường**")
 
         origin_chart_data = (
             origin_result
@@ -813,18 +786,13 @@ elif menu == "❌ Phân tích bất thường":
             origin_chart_data["Count"]
         )
 
-
         
-        # PARETO - NHÓM CHIẾM 80%
-        
-
+        # Phân tích nhóm trạm chiếm khoảng 80%   
         origin_80 = find_80_percent_origin(
             anomaly_data
         )
 
-        st.write(
-            "### Nhóm trạm chiếm khoảng 80% ca bất thường"
-        )
+        st.write("**Nhóm trạm chiếm khoảng 80% ca bất thường**")
 
         st.dataframe(
             origin_80,
@@ -840,14 +808,9 @@ elif menu == "❌ Phân tích bất thường":
             f"{total_80:.2f}%"
         )
 
-
         
-        # PARETO CHART
-        
-
-        st.write(
-            "### Phân tích Pareto theo trạm xuất phát"
-        )
+        # Biểu đồ Pareto
+        st.write("**Phân tích Pareto theo trạm xuất phát**")
 
         pareto_data = (
             origin_result[
@@ -875,7 +838,8 @@ elif menu == "❌ Phân tích bất thường":
 
         fig_pareto = go.Figure()
 
-        # Cột số lượng anomaly
+ 
+        # Cột số lượng ca bất thường
         fig_pareto.add_trace(
             go.Bar(
                 x=pareto_data["Origin_Facility"],
@@ -884,6 +848,7 @@ elif menu == "❌ Phân tích bất thường":
             )
         )
 
+  
         # Đường phần trăm tích lũy
         fig_pareto.add_trace(
             go.Scatter(
@@ -897,7 +862,8 @@ elif menu == "❌ Phân tích bất thường":
             )
         )
 
-        # Đường 80%
+
+        # Đường tham chiếu 80%
         fig_pareto.add_hline(
             y=80,
             line_dash="dash",
@@ -925,18 +891,11 @@ elif menu == "❌ Phân tích bất thường":
             use_container_width=True
         )
 
-
-    st.divider()
-
-
     
-    # CÂU HỎI 2
-    # CÓ PHẢI TẤT CẢ ĐỀU HIGH TRAFFIC?
-    
+    # Phân tích 2 - Điều kiện giao thông
+    # Kiểm tra các ca bất thường trong điều kiện High Traffic 
 
-    st.subheader(
-        "2. Các ca bất thường có phải đều xảy ra khi High Traffic?"
-    )
+    st.subheader("2. Phân bố ca bất thường theo điều kiện giao thông")
 
     traffic_result = analyze_traffic(
         anomaly_data
@@ -951,22 +910,17 @@ elif menu == "❌ Phân tích bất thường":
     else:
 
         
-        # BẢNG
-        
+        # Bảng dữ liệu
 
-        st.write(
-            "### Phân bố ca bất thường theo điều kiện giao thông"
-        )
+        st.write("**Phân bố ca bất thường theo điều kiện giao thông**")
 
         st.dataframe(
             traffic_result,
             use_container_width=True
         )
 
-
-        
-        # BAR CHART
-        
+   
+        # Biểu đồ cột        
 
         traffic_chart_data = (
             traffic_result
@@ -977,11 +931,9 @@ elif menu == "❌ Phân tích bất thường":
             traffic_chart_data["Count"]
         )
 
-
         
         # CHECK HIGH TRAFFIC
         
-
         all_high = check_high_traffic(
             anomaly_data
         )
@@ -1001,28 +953,19 @@ elif menu == "❌ Phân tích bất thường":
             )
 
 
-    st.divider()
-
-
+    # Phân tích 3 - Heavy Truck và tải trọng
+    # Kiểm tra Heavy Truck có tải trọng thấp
     
-    # CÂU HỎI 3
-    # HEAVY TRUCK CÓ CHỞ QUÁ ÍT HÀNG?
-    
-
-    st.subheader(
-        "3. Heavy Truck có đang chở lượng hàng quá ít?"
-    )
+    st.subheader("3. Heavy Truck và tải trọng thấp")
 
     truck_result = analyze_heavy_truck(
         anomaly_data,
         clean_data
     )
 
-
     
-    # METRICS
+    # Các chỉ số
     
-
     col1, col2, col3 = st.columns(3)
 
     with col1:
@@ -1056,11 +999,9 @@ elif menu == "❌ Phân tích bất thường":
         f"**{truck_result['low_load_percentage']:.2f}%**"
     )
 
-
+ 
+    # Phân bố tải trọng Heavy Truck
     
-    # HISTOGRAM TẢI TRỌNG HEAVY TRUCK
-    
-
     heavy_truck_data = anomaly_data[
         anomaly_data["Vehicle_Type"]
         == "Heavy Truck"
@@ -1069,9 +1010,7 @@ elif menu == "❌ Phân tích bất thường":
 
     if not heavy_truck_data.empty:
 
-        st.write(
-            "### Phân bố tải trọng Heavy Truck"
-        )
+        st.write("**Phân bố tải trọng Heavy Truck**")
 
         import plotly.express as px
 
@@ -1091,7 +1030,8 @@ elif menu == "❌ Phân tích bất thường":
             }
         )
 
-        # Đường ngưỡng Q1
+
+        # Đường tham chiếu ngưỡng Q1
         fig_weight.add_vline(
             x=truck_result["threshold"],
             line_dash="dash",
@@ -1110,18 +1050,14 @@ elif menu == "❌ Phân tích bất thường":
             use_container_width=True
         )
 
-
+  
+    # Các ca Heavy Truck có tải trọng thấp
     
-    # CÁC CA HEAVY TRUCK TẢI THẤP
-    
-
     if truck_result[
         "low_load_count"
     ] > 0:
 
-        st.write(
-            "### Các ca Heavy Truck tải trọng thấp"
-        )
+        st.write("**Các ca Heavy Truck tải trọng thấp**")
 
         st.dataframe(
             truck_result["low_load"],
@@ -1135,24 +1071,16 @@ elif menu == "❌ Phân tích bất thường":
             "có tải trọng thấp hơn ngưỡng Q1."
         )
 
-
-    st.divider()
-
-
+   
+    # Phân tích bổ sung
+    # Quan hệ giữa tải trọng và phát thải
     
-    # CÂU HỎI BỔ SUNG
-    # QUAN HỆ TẢI TRỌNG VÀ PHÁT THẢI
-    
-
-    st.subheader(
-        "4. Quan hệ giữa tải trọng và phát thải"
-    )
+    st.subheader("4. Quan hệ giữa tải trọng và phát thải")
 
     st.write(
         "Biểu đồ giúp phát hiện các trường hợp "
         "tải trọng thấp nhưng lượng phát thải cao."
     )
-
 
     scatter_data = anomaly_data[
         [
@@ -1160,7 +1088,6 @@ elif menu == "❌ Phân tích bất thường":
             "Carbon_Emission_kgCO2e"
         ]
     ].dropna()
-
 
     if not scatter_data.empty:
 
@@ -1189,14 +1116,13 @@ elif menu == "❌ Phân tích bất thường":
             fig_scatter,
             use_container_width=True
         )
-    
-    # KẾT LUẬN
+
+
+    # Tóm tắt kết quả phân tích
     
     st.divider()
 
-    st.subheader(
-        "Tóm tắt phân tích"
-    )
+    st.subheader("Tóm tắt phân tích bất thường")
 
     st.write(
         f"""
@@ -1210,13 +1136,16 @@ elif menu == "❌ Phân tích bất thường":
         """
     )
 
+
+
 elif menu == "🍀 Đề xuất giải pháp Logistics Xanh":
 
-    # PART 7
+
+    # PART 7 - ĐỀ XUẤT GIẢI PHÁP
 
     st.divider()
 
-    st.title("Đề xuất giải pháp Logistics Xanh")
+    st.header("🍀 Đề xuất giải pháp Logistics Xanh")
 
     solution_result = generate_solutions(
         clean_data,
@@ -1235,7 +1164,8 @@ elif menu == "🍀 Đề xuất giải pháp Logistics Xanh":
             solution_result
         )
 
-        # KPI
+
+        # Chỉ số tổng quan (KPI)
         col1, col2, col3 = st.columns(3)
 
         col1.metric(
@@ -1253,9 +1183,8 @@ elif menu == "🍀 Đề xuất giải pháp Logistics Xanh":
             summary["Medium"]
         )
 
-        st.divider()
 
-        # Hiển thị từng giải pháp
+        # Hiển thị chi tiết từng giải pháp
         for i, row in solution_result.iterrows():
 
             if row["Priority"] == "Cao":
@@ -1288,8 +1217,6 @@ elif menu == "🍀 Đề xuất giải pháp Logistics Xanh":
         clean_data,
         anomaly_data
     )
-
-    st.title("Đề xuất giải pháp Logistics Xanh")
 
     solution_display = solution_result.copy()
     solution_display.insert(
@@ -1326,7 +1253,7 @@ elif menu == "🍀 Đề xuất giải pháp Logistics Xanh":
         }
     )
 
-# FOOTER
+# Chân trang
 
 st.divider()
 
